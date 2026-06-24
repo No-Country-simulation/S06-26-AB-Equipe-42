@@ -1,0 +1,1 @@
+// Consulta page component
