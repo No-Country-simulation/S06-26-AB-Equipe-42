@@ -17,30 +17,30 @@ from app.models.schemas import SourceInfo
 
 logger = logging.getLogger(__name__)
 
-# Caminho para o dataset — encontra o repositório de forma robusta
+# Caminho para o dataset — usa data/raw/ (versionado no git)
 def _encontrar_repo_root() -> str:
     """
-    Encontra a raiz do repositório verificando onde o appbit-main está.
+    Encontra a raiz do repositório verificando onde data/raw/ está.
     Tenta primeiro o diretório de trabalho actual (CWD), depois sobe a partir deste ficheiro.
     """
     # Tentativa 1: CWD (funciona quando se corre uvicorn da raiz do repo)
-    cwd_candidate = os.path.join(os.getcwd(), "appbit-main")
-    if os.path.isdir(cwd_candidate):
+    if os.path.isdir(os.path.join(os.getcwd(), "data", "raw")):
         return os.getcwd()
     # Tentativa 2: subir 4 níveis a partir deste ficheiro
     file_candidate = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
     )
-    if os.path.isdir(os.path.join(file_candidate, "appbit-main")):
+    if os.path.isdir(os.path.join(file_candidate, "data", "raw")):
         return file_candidate
     # Fallback: CWD
     return os.getcwd()
 
 
 _REPO_ROOT = _encontrar_repo_root()
-_DATASET_PATH = os.path.join(
-    _REPO_ROOT, "appbit-main", "dataset-visent", "tensores", "tensor_concentracao.csv"
-)
+# data/raw/ contém os CSVs pequenos versionados no git.
+# Os ficheiros grandes (tensor_mobilidade.csv, tensor_sequencias.csv)
+# devem ser descarregados manualmente — ver data/raw/README.md
+_DATASET_PATH = os.path.join(_REPO_ROOT, "data", "raw", "tensor_concentracao.csv")
 
 
 @lru_cache(maxsize=1)
