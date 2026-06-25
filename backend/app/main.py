@@ -5,9 +5,20 @@ Inicializa a app, configura CORS e regista todos os routers.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.api.routers import health, dados, mapa, regioes, indicadores
+
+
+class UTF8JSONResponse(JSONResponse):
+    """
+    Resposta JSON com charset UTF-8 declarado explicitamente no Content-Type.
+    Necessário para que o PowerShell (Windows) interprete correctamente
+    os caracteres acentuados em vez de os corromper para Latin-1.
+    """
+    media_type = "application/json; charset=utf-8"
+
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -15,6 +26,7 @@ app = FastAPI(
     description="API do AppBit Painel — plataforma de consulta inteligente de dados de rede e mobilidade de Angola.",
     docs_url="/docs",
     redoc_url="/redoc",
+    default_response_class=UTF8JSONResponse,
 )
 
 # --- Configuração de CORS ---
