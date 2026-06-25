@@ -28,7 +28,13 @@ class Settings:
     OPENROUTER_BASE_URL: str = os.getenv(
         "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
     )
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "google/gemini-2.5-flash:free")
+    # Modelos gratuitos confirmados no OpenRouter (jun/2026) — $0/M tokens:
+    # openai/gpt-oss-120b:free       ← RECOMENDADO (suporte nativo a JSON + function calling)
+    # google/gemma-4-31b-it:free     ← boa alternativa (multilíngue, bom em Português)
+    # nvidia/nemotron-3-ultra:free   ← poderoso (550B MoE, 1M context)
+    # openrouter/owl-alpha           ← agentic workflows
+    # nvidia/nemotron-3-super:free   ← 120B, bom equilíbrio
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "openai/gpt-oss-120b:free")
 
     # --- CORS ---
     CORS_ORIGINS: list = os.getenv(

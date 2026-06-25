@@ -165,11 +165,54 @@ def _prompt_padrao(nome: str) -> str:
 
 
 def _interpretar_mock(texto: str) -> dict:
-    """Interpretação simulada para desenvolvimento sem chave de API."""
+    """
+    Interpretação heurística para quando o LLM não está disponível.
+    Detecta palavras-chave de indicador, região, período e direção (maior/menor).
+    """
+    t = texto.lower()
+
+    # --- Indicador ---
+    indicador = None
+    if any(p in t for p in ["congest", "saturad", "tráfego", "trafego"]):
+        indicador = "congestionamento_medio"
+    elif any(p in t for p in ["utilizador", "usuario", "pessoas", "população", "populacao"]):
+        indicador = "n_usuarios"
+    elif any(p in t for p in ["sinal", "cobertura", "dbm", "qualidade"]):
+        indicador = "drop_pct_medio"
+
+    # --- Período ---
+    periodo = None
+    if any(p in t for p in ["manhã", "manha", "manhã"]):
+        periodo = "MANHA"
+    elif "tarde" in t:
+        periodo = "TARDE"
+    elif "noite" in t:
+        periodo = "NOITE"
+    elif "madrugada" in t:
+        periodo = "MADRUGADA"
+
+    # --- Região ---
+    regiao = None
+    regioes_conhecidas = [
+        "beiramar", "beira-mar", "trindade", "ufsc", "coqueiros",
+        "estreito", "aeroporto", "campeche", "lagoa", "jurere",
+        "canasvieiras", "ingleses", "norte", "kobrasol", "palhoca",
+        "biguacu", "sao jose", "são josé", "via expressa",
+        "florianopolis", "florianópolis",
+    ]
+    for r in regioes_conhecidas:
+        if r in t:
+            regiao = r
+            break
+
+    # --- Direção: menor/pior → ordem crescente ---
+    ordem_crescente = any(p in t for p in ["menor", "mínimo", "minimo", "pior", "menos", "baixo", "baixa"])
+
     return {
-        "regiao": None,
-        "indicador": "congestionamento_medio",
-        "periodo": None,
+        "regiao": regiao,
+        "indicador": indicador or "congestionamento_medio",
+        "periodo": periodo,
+        "ordem_crescente": ordem_crescente,
         "confianca": 0.5,
         "mock": True,
     }

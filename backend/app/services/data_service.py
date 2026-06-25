@@ -132,15 +132,19 @@ async def pesquisar_dados(parametros: dict[str, Any]) -> tuple[list[dict], list[
     dados_agrupados = _agregar_por_cluster(dados)
 
     # --- Ordenação pelo indicador de interesse ---
+    # ordem_crescente=True quando o utilizador pede "menor", "pior", "mais baixo", etc.
+    ordem_crescente: bool = parametros.get("ordem_crescente", False)
+    decrescente = not ordem_crescente
+
     if indicador == "n_usuarios":
-        dados_agrupados.sort(key=lambda x: x["n_usuarios"], reverse=True)
+        dados_agrupados.sort(key=lambda x: x["n_usuarios"], reverse=decrescente)
     elif indicador == "congestionamento_medio":
-        dados_agrupados.sort(key=lambda x: x["congestionamento_medio"], reverse=True)
+        dados_agrupados.sort(key=lambda x: x["congestionamento_medio"], reverse=decrescente)
     elif indicador == "drop_pct_medio":
-        dados_agrupados.sort(key=lambda x: x["drop_pct_medio"], reverse=True)
+        dados_agrupados.sort(key=lambda x: x["drop_pct_medio"], reverse=decrescente)
     else:
-        # Sem indicador específico: ordena por número de utilizadores
-        dados_agrupados.sort(key=lambda x: x["n_usuarios"], reverse=True)
+        dados_agrupados.sort(key=lambda x: x["n_usuarios"], reverse=decrescente)
+
 
     fontes = [
         SourceInfo(
