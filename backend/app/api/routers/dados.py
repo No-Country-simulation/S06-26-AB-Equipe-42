@@ -62,6 +62,16 @@ async def consultar_dados(pedido: QueryRequest):
     # --- Etapa 2: Pesquisar dados reais ---
     # Funde os filtros estruturados do utilizador com os parâmetros extraídos pelo LLM
     parametros_finais = {**parametros, **(pedido.filtros or {})}
+
+    # Salvaguarda: detectar direcção (maior/menor) directamente no texto original,
+    # caso o LLM não tenha incluído o campo ordem_crescente na sua resposta JSON.
+    if "ordem_crescente" not in parametros_finais:
+        texto_lower = pedido.consulta.lower()
+        palavras_menor = ["menor", "mínimo", "minimo", "pior", "menos", "baixo", "baixa", "mínima"]
+        parametros_finais["ordem_crescente"] = any(p in texto_lower for p in palavras_menor)
+        if parametros_finais["ordem_crescente"]:
+            logger.info("Direcção detectada no texto: ordem crescente (menor/pior).")
+
     try:
         dados, fontes = await data_service.pesquisar_dados(parametros_finais)
     except Exception as e:
