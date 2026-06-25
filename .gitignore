@@ -1,1 +1,22 @@
 noSend/
+appbit-main/
+
+# Ficheiros de dados demasiado grandes para o git
+data/raw/tensor_mobilidade.csv
+data/raw/tensor_sequencias.csv
+
+# Ambiente Python
+backend/venv/
+backend/__pycache__/
+**/__pycache__/
+**/*.pyc
+backend/.env
+
+# Dependências frontend
+frontend/node_modules/
+frontend/.env
+
+# Variáveis de ambiente reais (nunca commitar)
+.env
+*.env
+!.env.example
