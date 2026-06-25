@@ -3,7 +3,7 @@ Serviço de Inteligência Artificial — Integração via OpenRouter.
 Implementa o pipeline de interpretação e síntese da consulta em linguagem natural.
 
 Integração: OpenAI SDK (cliente gratuito) apontando para OpenRouter.
-Modelos gratuitos: google/gemini-3.5-flash:free ou meta-llama/llama-3-8b-instruct:free
+Modelos gratuitos: google/gemini-2.5-flash:free ou meta-llama/llama-3-8b-instruct:free
 
 Responsável: Edivaldo Bernardo (implementação real dos prompts e lógica LLM).
              Willfredy Vieira Dias (esqueleto de integração e contratos).
@@ -121,10 +121,8 @@ async def sintetizar_resposta(
 
     except Exception as e:
         logger.error("Erro ao sintetizar resposta via LLM: %s", str(e))
-        return (
-            "Não foi possível gerar uma síntese automática neste momento. "
-            "Consulte os dados em bruto abaixo."
-        )
+        # Degradação graciosa: usa síntese mock informativa com dados reais
+        return _sintetizar_mock(dados, pergunta_original)
 
 
 # ---------------------------------------------------------------------------
@@ -178,15 +176,39 @@ def _interpretar_mock(texto: str) -> dict:
 
 
 def _sintetizar_mock(dados: list, pergunta: str) -> str:
-    """Síntese simulada para desenvolvimento sem chave de API."""
+    """
+    Síntese automática com base nos dados reais quando o LLM não está disponível.
+    Usa os campos reais devolvidos pelo data_service (cluster, municipio, etc.).
+    """
     if not dados:
         return "Não foram encontrados dados para a sua consulta."
-    primeiro = dados[0]
-    return (
-        f"[Resposta Mock] Com base nos dados disponíveis, "
-        f"o cluster '{primeiro.get('nome_cluster', 'desconhecido')}' "
-        f"em {primeiro.get('municipio', 'município desconhecido')} "
-        f"apresenta {primeiro.get('n_usuarios', 0)} utilizadores ativos "
-        f"com um congestionamento médio de {primeiro.get('congestionamento_medio', 0):.0%}. "
-        f"(Integração LLM real pendente de configuração da OPENROUTER_API_KEY)"
+
+    top = dados[0]
+    cluster = top.get("cluster", "desconhecido")
+    municipio = top.get("municipio", "município desconhecido")
+    n_usuarios = top.get("n_usuarios", 0)
+    congestionamento = top.get("congestionamento_medio", 0)
+    drop = top.get("drop_pct_medio", 0)
+
+    linhas = [
+        f"Com base nos dados do dataset Vísent (tensor_concentracao), "
+        f"o cluster com maior destaque para a sua consulta é **{cluster}** "
+        f"(município de {municipio}).",
+        f"\nIndicadores agregados: {n_usuarios:,} utilizadores ativos, "
+        f"congestionamento médio de {congestionamento:.1%}, "
+        f"taxa de descarte de pacotes de {drop:.1%}.",
+    ]
+
+    if len(dados) > 1:
+        segundo = dados[1]
+        linhas.append(
+            f"\nO segundo cluster é **{segundo.get('cluster', '—')}** "
+            f"({segundo.get('municipio', '—')}) com "
+            f"{segundo.get('n_usuarios', 0):,} utilizadores."
+        )
+
+    linhas.append(
+        f"\n\nFonte: tensor_concentracao — Dataset Vísent CDRView AppBiT v2 "
+        f"(Visent / OSX Telecomunicações S/A, jun/2026)."
     )
+    return "".join(linhas)
