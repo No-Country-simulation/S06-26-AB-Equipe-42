@@ -21,19 +21,24 @@ logger = logging.getLogger(__name__)
 def _encontrar_repo_root() -> str:
     """
     Encontra a raiz do repositório verificando onde data/raw/ está.
-    Tenta primeiro o diretório de trabalho actual (CWD), depois sobe a partir deste ficheiro.
+    Suporta execução a partir da raiz do repo ou da pasta backend/.
     """
-    # Tentativa 1: CWD (funciona quando se corre uvicorn da raiz do repo)
-    if os.path.isdir(os.path.join(os.getcwd(), "data", "raw")):
-        return os.getcwd()
-    # Tentativa 2: subir 4 níveis a partir deste ficheiro
+    cwd = os.getcwd()
+    # Tentativa 1: CWD é a raiz do repo (data/raw/ existe aqui)
+    if os.path.isdir(os.path.join(cwd, "data", "raw")):
+        return cwd
+    # Tentativa 2: CWD é backend/ — sobe 1 nível
+    parent = os.path.abspath(os.path.join(cwd, ".."))
+    if os.path.isdir(os.path.join(parent, "data", "raw")):
+        return parent
+    # Tentativa 3: sobe 4 níveis a partir deste ficheiro (app/services/)
     file_candidate = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
     )
     if os.path.isdir(os.path.join(file_candidate, "data", "raw")):
         return file_candidate
     # Fallback: CWD
-    return os.getcwd()
+    return cwd
 
 
 _REPO_ROOT = _encontrar_repo_root()

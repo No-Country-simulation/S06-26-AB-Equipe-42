@@ -28,7 +28,7 @@ class Settings:
     OPENROUTER_BASE_URL: str = os.getenv(
         "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
     )
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "google/gemini-3.5-flash:free")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "google/gemini-2.5-flash:free")
 
     # --- CORS ---
     CORS_ORIGINS: list = os.getenv(

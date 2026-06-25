@@ -46,8 +46,10 @@ async def consultar_dados(pedido: QueryRequest):
         )
 
     # --- Verificação de confiança: pede esclarecimento se muito baixa ---
+    # Nota: confianca == 0.0 indica erro do LLM (fallback mock) — não bloquear
     confianca = parametros.get("confianca", 1.0)
-    if isinstance(confianca, (int, float)) and confianca < 0.3:
+    is_mock = parametros.get("mock", False)
+    if isinstance(confianca, (int, float)) and confianca < 0.3 and not is_mock and confianca != 0.0:
         raise HTTPException(
             status_code=400,
             detail=(
