@@ -1,1 +1,33 @@
-# CI/CD workflow for frontend
+name: Frontend CI
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/ci-frontend.yml'
+  pull_request:
+    branches: [ "dev", "main" ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/ci-frontend.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Validate package.json
+      run: |
+        node -e "try { require('./package.json'); console.log('package.json é válido!'); } catch(err) { console.error('Erro no package.json:', err); process.exit(1); }"
